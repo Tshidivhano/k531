@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K53 Road Signs Learner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .app-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        .tab-btn.active {
+            background-color: #2563eb;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Study Section Grid & Flip Cards */
+        .study-container {
+            display: none;
+        }
+        .study-container.active {
+            display: block;
+        }
+        .filter-container {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            background-color: #f3f4f6;
+            border: 2px solid #e5e7eb;
+            color: #4b5563;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover {
+            background-color: #e5e7eb;
+        }
+        .filter-btn.active {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+        
+        .study-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .flip-card {
+            background-color: transparent;
+            width: 100%;
+            height: 220px;
+            perspective: 1000px; /* 3D effect */
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        /* Flip on hover */
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; /* Safari */
+            backface-visibility: hidden;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .flip-card-front {
+            background-color: white;
+        }
+        .flip-card-front img {
+            max-width: 130px;
+            max-height: 130px;
+            object-fit: contain;
+        }
+        .flip-card-back {
+            background-color: #1d4ed8;
+            color: white;
+            transform: rotateY(180deg);
+            flex-direction: column;
+        }
+        .flip-card-back p {
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+        .flip-card-back span {
+            font-size: 0.875rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+
+        /* General Quiz Container */
+        .quiz-container {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            display: none;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .quiz-container.active {
+            display: block;
+        }
+        .quiz-image-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            min-height: 160px;
+        }
+        .quiz-image-container img {
+            max-height: 160px;
+            object-fit: contain;
+        }
+
+        /* Multiple Choice Options */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        @media (min-width: 640px) {
+            .options-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .option-btn {
+            background-color: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .option-btn:hover:not(:disabled) {
+            background-color: #e5e7eb;
+            border-color: #d1d5db;
+        }
+        .option-btn.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        .option-btn.wrong {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        /* Typing Quiz Elements */
+        .typing-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .typing-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.125rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .typing-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .typing-input:disabled {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+        .submit-btn {
+            background-color: #10b981;
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            font-size: 1.125rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .submit-btn:hover {
+            background-color: #059669;
+        }
+        .feedback-message {
+            text-align: center;
+            font-size: 1.125rem;
+            font-weight: 600;
+            min-height: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Controls & Results */
+        .quiz-controls {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px solid #f3f4f6;
+            padding-top: 1.5rem;
+        }
+        .next-btn {
+            background-color: #2563eb;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            display: none;
+        }
+        .next-btn:hover {
+            background-color: #1d4ed8;
+        }
+        .result-screen {
+            text-align: center;
+            display: none;
+        }
+        .setup-area {
+            text-align: center;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-blue-700 tracking-tight">K53 Road Signs Learner</h1>
+            <p class="text-gray-600 mt-2 text-lg">Master Control & Command Signs</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" id="tab-study" onclick="switchTab('study')">📖 Study Flashcards</button>
+            <button class="tab-btn" id="tab-mcq" onclick="switchTab('mcq')">🎯 Multiple Choice Test</button>
+            <button class="tab-btn" id="tab-typing" onclick="switchTab('typing')">⌨️ Typing Test</button>
+        </nav>
+
+        <main>
+            <!-- Study Section (Flashcards) -->
+            <div id="study-section" class="study-container active">
+                <div class="filter-container">
+                    <button class="filter-btn active" id="filter-all" onclick="filterStudyCards('All')">All Signs</button>
+                    <button class="filter-btn" id="filter-control" onclick="filterStudyCards('Control')">Control Signs</button>
+                    <button class="filter-btn" id="filter-command" onclick="filterStudyCards('Command')">Command Signs</button>
+                </div>
+                <div id="study-grid" class="study-grid">
+                    <!-- Cards injected by JS -->
+                </div>
+            </div>
+
+            <!-- Multiple Choice Section -->
+            <div id="mcq-section" class="quiz-container">
+                <div id="mcq-setup-area" class="setup-area">
+                    <h2 class="text-2xl font-bold mb-4">Multiple Choice Test Setup</h2>
+                    <p class="text-gray-600 mb-6">Select a category to test your knowledge.</p>
+                    <div class="mb-8 flex justify-center">
+                        <select id="mcq-category-select" class="p-3 border-2 border-gray-300 rounded-lg text-lg w-full max-w-xs focus:border-blue-500 focus:outline-none bg-white">
+                            <option value="All">Mixed (All Categories)</option>
+                            <option value="Control">Control Signs Only</option>
+                            <option value="Command">Command Signs Only</option>
+                        </select>
+                    </div>
+                    <button class="submit-btn px-8" onclick="startMcqQuiz()">Start Test</button>
+                </div>
+
+                <div id="mcq-active-area" style="display: none;">
+                    <div class="text-center mb-4 text-gray-500 font-bold tracking-wider uppercase">
+                        Question <span id="mcq-current-num">1</span> / <span id="mcq-total-num">10</span>
+                    </div>
+                    <h2 class="text-2xl text-center font-bold mb-6">Select the correct sign name:</h2>
+                    
+                    <div class="quiz-image-container">
+                        <img id="mcq-image" src="" alt="Sign Question">
+                    </div>
+
+                    <div id="mcq-options" class="options-grid">
+                        <!-- Options injected by JS -->
+                    </div>
+
+                    <div class="quiz-controls">
+                        <div class="text-xl font-bold text-gray-700">Score: <span id="mcq-score" class="text-blue-600">0</span></div>
+                        <button id="mcq-next-btn" class="next-btn" onclick="nextMcqQuestion()">Next Question ➡️</button>
+                    </div>
+                </div>
+
+                <div id="mcq-result-area" class="result-screen">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">Test Complete!</h2>
+                    <p class="text-xl mb-6">You scored <span id="mcq-final-score" class="font-extrabold text-blue-600"></span> out of <span id="mcq-final-total" class="font-bold"></span>.</p>
+                    <div id="mcq-feedback-text" class="text-lg font-medium mb-8"></div>
+                    <button class="submit-btn px-8" onclick="showMcqSetup()">Restart & Choose Category</button>
+                </div>
+            </div>
+
+            <!-- Typing Quiz Section -->
+            <div id="typing-section" class="quiz-container">
+                <div id="typing-setup-area" class="setup-area">
+                    <h2 class="text-2xl font-bold mb-4">Typing Test Setup</h2>
+                    <p class="text-gray-600 mb-6">Select a category to test your typing memory.</p>
+                    <div class="mb-8 flex justify-center">
+                        <select id="typing-category-select" class="p-3 border-2 border-gray-300 rounded-lg text-lg w-full max-w-xs focus:border-blue-500 focus:outline-none bg-white">
+                            <option value="All">Mixed (All Categories)</option>
+                            <option value="Control">Control Signs Only</option>
+                            <option value="Command">Command Signs Only</option>
+                        </select>
+                    </div>
+                    <button class="submit-btn px-8" onclick="startTypingQuiz()">Start Test</button>
+                </div>
+
+                <div id="typing-active-area" style="display: none;">
+                    <div class="text-center mb-4 text-gray-500 font-bold tracking-wider uppercase">
+                        Question <span id="typing-current-num">1</span> / <span id="typing-total-num">10</span>
+                    </div>
+                    <h2 class="text-2xl text-center font-bold mb-6">Type the exact name of this sign:</h2>
+                    
+                    <div class="quiz-image-container">
+                        <img id="typing-image" src="" alt="Sign Question">
+                    </div>
+
+                    <div class="typing-input-group">
+                        <input type="text" id="typing-input" class="typing-input" placeholder="Enter sign name..." autocomplete="off" onkeypress="handleEnter(event)">
+                        <button id="typing-submit-btn" class="submit-btn" onclick="checkTypingAnswer()">Submit Answer</button>
+                    </div>
+
+                    <div id="typing-feedback" class="feedback-message"></div>
+
+                    <div class="quiz-controls">
+                        <div class="text-xl font-bold text-gray-700">Score: <span id="typing-score" class="text-blue-600">0</span></div>
+                        <button id="typing-next-btn" class="next-btn" onclick="nextTypingQuestion()">Next Question ➡️</button>
+                    </div>
+                </div>
+
+                <div id="typing-result-area" class="result-screen">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">Typing Test Complete!</h2>
+                    <p class="text-xl mb-6">You scored <span id="typing-final-score" class="font-extrabold text-blue-600"></span> out of <span id="typing-final-total" class="font-bold"></span>.</p>
+                    <div id="typing-feedback-text" class="text-lg font-medium mb-8"></div>
+                    <button class="submit-btn px-8" onclick="showTypingSetup()">Restart & Choose Category</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Combined Data for Control and Command Signs
+        const signData = [
+            // --- CONTROL SIGNS ---
+            { id: 1, category: "Control", name: "3-Way Stop", img: "https://i.postimg.cc/rpwwGqgf/3-way-Stop.png" },
+            { id: 2, category: "Control", name: "4-Way Stop", img: "https://i.postimg.cc/htrG7X8N/4-way-stop.png" },
+            { id: 3, category: "Control", name: "No Entry", img: "https://i.postimg.cc/MpDGjn0F/no-entry-sign.png" },
+            { id: 4, category: "Control", name: "One-Way Roadway (Right)", img: "https://i.postimg.cc/9QpfqDPL/one-way-roadway-sign.png" },
+            { id: 5, category: "Control", name: "One-Way Roadway (Straight)", img: "https://i.postimg.cc/y8PNSDhj/one-way-roadway-sign-2.png" },
+            { id: 6, category: "Control", name: "One-Way Traffic", img: "https://i.postimg.cc/mgwrFP38/one-way-traffic-sign.png" },
+            { id: 7, category: "Control", name: "Pedestrian Priority", img: "https://i.postimg.cc/Bngv1j5w/pedestrain-priority-sign.png" },
+            { id: 8, category: "Control", name: "Stop", img: "https://i.postimg.cc/CKxxCwJr/Stop.jpg" },
+            { id: 9, category: "Control", name: "Stop or Go", img: "https://i.postimg.cc/VNkk9z4x/stop-go-sign.png" },
+            { id: 10, category: "Control", name: "Stop or Yield", img: "https://i.postimg.cc/DzwwQ75j/Stop-Yield-sign.jpg" },
+            { id: 11, category: "Control", name: "Yield at Mini Circle", img: "https://i.postimg.cc/0yfNJzG4/yield-at-mini-circle-sign.png" },
+            { id: 12, category: "Control", name: "Yield for Pedestrians", img: "https://i.postimg.cc/T39PWKjF/yield-for-pedestrain-sign.png" },
+            { id: 13, category: "Control", name: "Yield", img: "https://i.postimg.cc/dVB0ThRX/yield-sign.png" },
+            { id: 14, category: "Control", name: "Yield to Oncoming Traffic", img: "https://i.postimg.cc/rwJptDGZ/Yield-To-oncoming-Traffic-Sign.png" },
+            
+            // --- COMMAND SIGNS ---
+            { id: 15, category: "Command", name: "Minimum Speed", img: "https://i.postimg.cc/Nf4ZsLPb/Minimum-Speed-sign.jpg" },
+            { id: 16, category: "Command", name: "Vehicles exceeding mass only", img: "https://i.postimg.cc/9FpsmzNx/vehicles-exceeding-mass-road-only-sign.png" },
+            { id: 17, category: "Command", name: "Keep left", img: "https://i.postimg.cc/X78tjXDL/Keep-Left-Sign.png" },
+            { id: 18, category: "Command", name: "Keep Right", img: "https://i.postimg.cc/Fsm2X0G2/Keep-Right-Sign.png" },
+            { id: 19, category: "Command", name: "Proceed left only", img: "https://i.postimg.cc/15PL1DMb/proceed-left-only-sign.png" },
+            { id: 20, category: "Command", name: "Proceed right only", img: "https://i.postimg.cc/YqkJBQ8V/proceed-right-only-sign.png" },
+            { id: 21, category: "Command", name: "Proceed straight only", img: "https://i.postimg.cc/65wDxCzg/proceed-straight-only-sign.png" },
+            { id: 22, category: "Command", name: "Turn left only", img: "https://i.postimg.cc/TYGZvnQs/turn-left-only-sign.png" },
+            { id: 23, category: "Command", name: "Turn right only", img: "https://i.postimg.cc/pXxgMKk1/turn-right-only-sign.png" },
+            { id: 24, category: "Command", name: "Pedestrian Only", img: "https://i.postimg.cc/PrhBn1K3/pedestrians-only-sign.png" },
+            { id: 25, category: "Command", name: "Pedal cycles only", img: "https://i.postimg.cc/pXxgMKk0/Pedal-cycles-only.jpg" },
+            { id: 26, category: "Command", name: "Pedal cycles and pedestrians only", img: "https://i.postimg.cc/VL13PX4K/Pedal-cycles-and-pedestrians-only-sign.png" },
+            { id: 27, category: "Command", name: "Motorcycles only", img: "https://i.postimg.cc/sDytC5Kc/Motorcycles-only-sign.png" },
+            { id: 28, category: "Command", name: "Motor cars only", img: "https://i.postimg.cc/qM09H2Qw/Motor-cars-only-sign.png" },
+            { id: 29, category: "Command", name: "Taxi's only", img: "https://i.postimg.cc/CLYWpbJ4/Taxi-s-only.png" },
+            { id: 30, category: "Command", name: "Mini-Buses only", img: "https://i.postimg.cc/VL13PX44/Mini-Buses-only.png" },
+            { id: 31, category: "Command", name: "Midi-buses only", img: "https://i.postimg.cc/5N1ZW8pS/Midi-buses-only.png" },
+            { id: 32, category: "Command", name: "Buses only", img: "https://i.postimg.cc/65wDxCzV/Buses-only.png" },
+            { id: 33, category: "Command", name: "Delivery Vehicles only", img: "https://i.postimg.cc/m2R0W7VN/Delivery-Vehicles-only.png" },
+            { id: 34, category: "Command", name: "Goods vehicles only", img: "https://i.postimg.cc/hPgHRVML/Goods-Vehicles-Only-sign.jpg" },
+            { id: 35, category: "Command", name: "Goods vehicles exceeding gross vehicle mass only", img: "https://i.postimg.cc/xTYWVLgM/Goods-vehicles-exceeding-gross-vehicle-mass-only.png" },
+            { id: 36, category: "Command", name: "Construction Vehicles only", img: "https://i.postimg.cc/28mPNnTn/Construction-Vehicles-only.png" },
+            { id: 37, category: "Command", name: "Abnormal Vehicles Only", img: "https://i.postimg.cc/SNqwbcV8/Abnormal-Vehicles-Only.png" },
+            { id: 38, category: "Command", name: "Vehicles conveying hazardous substances only", img: "https://i.postimg.cc/28mPNnTW/Vehicles-conveying-hazardous-substances-only.png" },
+            { id: 39, category: "Command", name: "Rickshaws only", img: "https://i.postimg.cc/KvFdhtQ3/Rickshaws-only.png" },
+            { id: 40, category: "Command", name: "Tour buses only", img: "https://i.postimg.cc/9FVvHy1R/Tour-buses-only.png" },
+            { id: 41, category: "Command", name: "Agricultural Vehicles only", img: "https://i.postimg.cc/7YDprSXC/Agricultural-Vehicles-only.png" },
+            { id: 42, category: "Command", name: "Animal drawn vehicles only", img: "https://i.postimg.cc/28mPNnT1/Animal-drawn-vehicles-only.png" },
+            { id: 43, category: "Command", name: "Pay toll", img: "https://i.postimg.cc/xjLWZ6Gv/Pay-Toll-road-sign-R132.jpg" },
+            { id: 44, category: "Command", name: "Switch head lamps on", img: "https://i.postimg.cc/X73T69xX/Switch-Headlamps-On-sign.jpg" },
+            { id: 45, category: "Command", name: "Buses and mini buses only", img: "https://i.postimg.cc/kMWkHTNx/Buses-and-mini-buses-only.png" },
+            { id: 46, category: "Command", name: "Buses and midi buses only", img: "https://i.postimg.cc/qB29F1c2/Buses-and-midi-buses-only.jpg" },
+            { id: 47, category: "Command", name: "Buses, midi buses, & mini buses only", img: "https://i.postimg.cc/dQGzf5Rr/Buses-midi-buses-mini-buses-only.png" },
+            { id: 48, category: "Command", name: "Round about", img: "https://i.postimg.cc/1RDLdv0q/Round-about-sign.png" },
+            { id: 49, category: "Command", name: "Tram Only", img: "https://i.postimg.cc/y60wGLh9/Tram-Only.png" },
+            { id: 50, category: "Command", name: "Buses & trams only", img: "https://i.postimg.cc/RCwjYg1n/Buses-trams-only.png" },
+            { id: 51, category: "Command", name: "Buses, Trams and mini buses only", img: "https://i.postimg.cc/9XyvkLPR/Buses-Trams-and-mini-buses-only.png" }
+        ];
+
+        // DOM Sections
+        const sectionStudy = document.getElementById('study-section');
+        const sectionMcq = document.getElementById('mcq-section');
+        const sectionTyping = document.getElementById('typing-section');
+        const studyGrid = document.getElementById('study-grid'); // Added for filtering
+
+        // Shared Quiz State Variables
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let isAnswered = false;
+        
+        // Define number of questions for a quick test session
+        const QUESTIONS_PER_TEST = 15; 
+
+        function init() {
+            filterStudyCards('All');
+            // Optional: preload images in background
+            setTimeout(() => {
+                signData.forEach(sign => { const img = new Image(); img.src = sign.img; });
+            }, 1000);
+        }
+
+        function switchTab(tab) {
+            // Reset active states
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            sectionStudy.classList.remove('active');
+            sectionMcq.classList.remove('active');
+            sectionTyping.classList.remove('active');
+
+            if (tab === 'study') {
+                document.getElementById('tab-study').classList.add('active');
+                sectionStudy.classList.add('active');
+            } else if (tab === 'mcq') {
+                document.getElementById('tab-mcq').classList.add('active');
+                sectionMcq.classList.add('active');
+                showMcqSetup();
+            } else if (tab === 'typing') {
+                document.getElementById('tab-typing').classList.add('active');
+                sectionTyping.classList.add('active');
+                showTypingSetup();
+            }
+        }
+
+        function filterStudyCards(category) {
+            // Update active button styling
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            if(category === 'All') document.getElementById('filter-all').classList.add('active');
+            if(category === 'Control') document.getElementById('filter-control').classList.add('active');
+            if(category === 'Command') document.getElementById('filter-command').classList.add('active');
+
+            const filteredSigns = category === 'All' ? signData : signData.filter(s => s.category === category);
+            renderStudyCards(filteredSigns);
+        }
+
+        function renderStudyCards(signsToRender) {
+            studyGrid.innerHTML = '';
+            signsToRender.forEach(sign => {
+                const card = document.createElement('div');
+                card.className = 'flip-card';
+                card.innerHTML = `
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <img src="${sign.img}" alt="Sign Image" loading="lazy">
+                        </div>
+                        <div class="flip-card-back">
+                            <p>${sign.name}</p>
+                            <span>${sign.category} Sign</span>
+                        </div>
+                    </div>
+                `;
+                studyGrid.appendChild(card);
+            });
+        }
+
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function showMcqSetup() {
+            document.getElementById('mcq-setup-area').style.display = 'block';
+            document.getElementById('mcq-active-area').style.display = 'none';
+            document.getElementById('mcq-result-area').style.display = 'none';
+        }
+
+        function startMcqQuiz() {
+            score = 0;
+            currentIndex = 0;
+            
+            // Filter based on user selection
+            const category = document.getElementById('mcq-category-select').value;
+            let availableSigns = category === 'All' ? signData : signData.filter(s => s.category === category);
+            
+            // Get random subset for the quiz
+            currentQuestions = shuffleArray(availableSigns).slice(0, Math.min(QUESTIONS_PER_TEST, availableSigns.length));
+            
+            document.getElementById('mcq-total-num').innerText = currentQuestions.length;
+            document.getElementById('mcq-setup-area').style.display = 'none';
+            document.getElementById('mcq-active-area').style.display = 'block';
+            document.getElementById('mcq-result-area').style.display = 'none';
+            document.getElementById('mcq-score').innerText = score;
+            
+            loadMcqQuestion();
+        }
+
+        function loadMcqQuestion() {
+            isAnswered = false;
+            document.getElementById('mcq-next-btn').style.display = 'none';
+            
+            const q = currentQuestions[currentIndex];
+            document.getElementById('mcq-current-num').innerText = currentIndex + 1;
+            document.getElementById('mcq-image').src = q.img;
+            
+            // Generate Options
+            const wrongSigns = signData.filter(s => s.id !== q.id);
+            const shuffledWrong = shuffleArray(wrongSigns).slice(0, 3);
+            const options = shuffleArray([q, ...shuffledWrong]);
+            
+            const optionsContainer = document.getElementById('mcq-options');
+            optionsContainer.innerHTML = '';
+            
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt.name;
+                btn.onclick = () => checkMcqAnswer(btn, opt, q);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkMcqAnswer(btn, selected, correct) {
+            if (isAnswered) return;
+            isAnswered = true;
+            
+            const buttons = document.querySelectorAll('#mcq-options .option-btn');
+            buttons.forEach(b => {
+                b.disabled = true;
+                if (b.innerText === correct.name) b.classList.add('correct');
+            });
+
+            if (selected.id === correct.id) {
+                score++;
+                document.getElementById('mcq-score').innerText = score;
+            } else {
+                btn.classList.add('wrong');
+            }
+            document.getElementById('mcq-next-btn').style.display = 'block';
+        }
+
+        function nextMcqQuestion() {
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) loadMcqQuestion();
+            else showResults('mcq');
+        }
+
+        function showTypingSetup() {
+            document.getElementById('typing-setup-area').style.display = 'block';
+            document.getElementById('typing-active-area').style.display = 'none';
+            document.getElementById('typing-result-area').style.display = 'none';
+        }
+
+        function startTypingQuiz() {
+            score = 0;
+            currentIndex = 0;
+            
+            // Filter based on user selection
+            const category = document.getElementById('typing-category-select').value;
+            let availableSigns = category === 'All' ? signData : signData.filter(s => s.category === category);
+
+            currentQuestions = shuffleArray(availableSigns).slice(0, Math.min(QUESTIONS_PER_TEST, availableSigns.length));
+            
+            document.getElementById('typing-total-num').innerText = currentQuestions.length;
+            document.getElementById('typing-setup-area').style.display = 'none';
+            document.getElementById('typing-active-area').style.display = 'block';
+            document.getElementById('typing-result-area').style.display = 'none';
+            document.getElementById('typing-score').innerText = score;
+            
+            loadTypingQuestion();
+        }
+
+        function loadTypingQuestion() {
+            isAnswered = false;
+            document.getElementById('typing-next-btn').style.display = 'none';
+            document.getElementById('typing-submit-btn').style.display = 'block';
+            document.getElementById('typing-feedback').innerHTML = '';
+            
+            const inputField = document.getElementById('typing-input');
+            inputField.value = '';
+            inputField.disabled = false;
+            inputField.focus();
+            
+            const q = currentQuestions[currentIndex];
+            document.getElementById('typing-current-num').innerText = currentIndex + 1;
+            document.getElementById('typing-image').src = q.img;
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter' && !isAnswered) {
+                checkTypingAnswer();
+            } else if (e.key === 'Enter' && isAnswered) {
+                nextTypingQuestion();
+            }
+        }
+
+        // Fuzzy match to make typing test fair
+        function normalizeString(str) {
+            // lowercase, remove spaces, ampersands, hyphens, punctuation
+            return str.toLowerCase()
+                      .replace(/&/g, 'and')
+                      .replace(/[^a-z0-9]/g, ''); 
+        }
+
+        function checkTypingAnswer() {
+            if (isAnswered) return;
+            
+            const inputField = document.getElementById('typing-input');
+            const userText = inputField.value.trim();
+            if (!userText) return; // don't submit empty
+
+            isAnswered = true;
+            inputField.disabled = true;
+            document.getElementById('typing-submit-btn').style.display = 'none';
+            
+            const correctSign = currentQuestions[currentIndex];
+            const normalizedUser = normalizeString(userText);
+            const normalizedCorrect = normalizeString(correctSign.name);
+            
+            const feedbackDiv = document.getElementById('typing-feedback');
+            
+            if (normalizedUser === normalizedCorrect) {
+                score++;
+                document.getElementById('typing-score').innerText = score;
+                feedbackDiv.innerHTML = `<span class="text-green-600">✅ Correct!</span>`;
+                inputField.style.borderColor = '#10b981'; // green
+            } else {
+                feedbackDiv.innerHTML = `<span class="text-red-600">❌ Incorrect.</span> The correct name is: <b>${correctSign.name}</b>`;
+                inputField.style.borderColor = '#ef4444'; // red
+            }
+            
+            document.getElementById('typing-next-btn').style.display = 'block';
+        }
+
+        function nextTypingQuestion() {
+            const inputField = document.getElementById('typing-input');
+            inputField.style.borderColor = '#e5e7eb'; // reset border
+            
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) loadTypingQuestion();
+            else showResults('typing');
+        }
+
+        function showResults(type) {
+            document.getElementById(`${type}-active-area`).style.display = 'none';
+            document.getElementById(`${type}-result-area`).style.display = 'block';
+            
+            document.getElementById(`${type}-final-score`).innerText = score;
+            document.getElementById(`${type}-final-total`).innerText = currentQuestions.length;
+            
+            const percentage = score / currentQuestions.length;
+            const feedbackEl = document.getElementById(`${type}-feedback-text`);
+            
+            if (percentage === 1) feedbackEl.innerHTML = 'Flawless victory! 🚗💨';
+            else if (percentage >= 0.8) feedbackEl.innerHTML = 'Great job! You know your signs well. 👍';
+            else if (percentage >= 0.5) feedbackEl.innerHTML = 'Good effort! A bit more study time needed. 📖';
+            else feedbackEl.innerHTML = 'Keep practicing! Review the flashcards. 🚦';
+        }
+
+        // Initialize on Load
+        document.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
